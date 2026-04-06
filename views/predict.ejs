@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deal Predictor</title>
+  <style>
+    :root {
+      --bg:
+        radial-gradient(circle at top left, rgba(255, 125, 74, 0.18), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(22, 166, 153, 0.22), transparent 30%),
+        linear-gradient(145deg, #fff9f3 0%, #ffe6d6 46%, #dff7f1 100%);
+      --panel: rgba(255, 255, 255, 0.82);
+      --line: rgba(28, 89, 86, 0.12);
+      --text: #1f3136;
+      --muted: #607178;
+      --warm: #ff7043;
+      --warm-dark: #d85a34;
+      --cool: #12a594;
+      --good: #0f9d73;
+      --bad: #cf4d47;
+      --shadow: 0 28px 80px rgba(48, 70, 77, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+      display: grid;
+      place-items: center;
+      color: var(--text);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      background: var(--bg);
+    }
+
+    .shell {
+      width: min(1120px, 100%);
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 32px;
+      overflow: hidden;
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+    }
+
+    .hero,
+    .formWrap {
+      padding: 34px;
+    }
+
+    .hero {
+      background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.96), rgba(255, 241, 232, 0.72)),
+        linear-gradient(180deg, rgba(255, 112, 67, 0.08), rgba(18, 165, 148, 0.12));
+      display: grid;
+      gap: 22px;
+      align-content: start;
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--warm-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.1rem, 5vw, 4rem);
+      line-height: 0.94;
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 32rem;
+    }
+
+    .iconStage {
+      position: relative;
+      min-height: 280px;
+      display: grid;
+      place-items: center;
+      isolation: isolate;
+    }
+
+    .orb {
+      position: absolute;
+      inset: auto;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(255, 112, 67, 0.18));
+      box-shadow: inset 0 0 0 18px rgba(255, 255, 255, 0.35);
+      animation: float 5s ease-in-out infinite;
+    }
+
+    .pulseRing {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      border: 2px solid rgba(18, 165, 148, 0.18);
+      animation: ripple 2.8s ease-out infinite;
+    }
+
+    .dealIcon {
+      position: relative;
+      z-index: 1;
+      font-size: 5.5rem;
+      line-height: 1;
+      animation: bounce 2.6s ease-in-out infinite;
+      user-select: none;
+    }
+
+    .heroStats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .stat {
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(28, 89, 86, 0.08);
+    }
+
+    .stat strong,
+    .stat span {
+      display: block;
+    }
+
+    .stat strong {
+      font-size: 1.2rem;
+      margin-bottom: 6px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .formWrap {
+      display: grid;
+      gap: 20px;
+      align-content: start;
+    }
+
+    .formHead h2 {
+      margin: 0 0 8px;
+      font-size: 1.35rem;
+    }
+
+    .formHead p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    form {
+      display: grid;
+      gap: 16px;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.96rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid rgba(255, 112, 67, 0.16);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--text);
+      font: inherit;
+      transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--warm);
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(255, 112, 67, 0.12);
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button,
+    .linkBtn {
+      padding: 14px 18px;
+      border: none;
+      border-radius: 999px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+      text-decoration: none;
+    }
+
+    button {
+      color: white;
+      background: linear-gradient(135deg, var(--warm), #ff9763);
+      min-width: 180px;
+    }
+
+    .linkBtn {
+      color: var(--warm-dark);
+      background: rgba(255, 112, 67, 0.12);
+    }
+
+    button:hover,
+    .linkBtn:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    .status {
+      min-height: 24px;
+      margin: 0;
+      color: var(--warm-dark);
+      font-weight: 700;
+    }
+
+    .resultCard {
+      display: grid;
+      gap: 16px;
+      padding: 22px;
+      border-radius: 26px;
+      border: 1px solid rgba(28, 89, 86, 0.08);
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(244, 253, 251, 0.82));
+      transform: translateY(10px) scale(0.98);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease, border-color 0.3s ease;
+    }
+
+    .resultCard.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .resultCard.good {
+      border-color: rgba(15, 157, 115, 0.25);
+    }
+
+    .resultCard.bad {
+      border-color: rgba(207, 77, 71, 0.25);
+    }
+
+    .resultTop {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .resultBadge {
+      width: 74px;
+      height: 74px;
+      border-radius: 22px;
+      display: grid;
+      place-items: center;
+      font-size: 2rem;
+      background: rgba(255, 112, 67, 0.1);
+      animation: badgePop 0.7s ease;
+    }
+
+    .resultText h3,
+    .resultText p {
+      margin: 0;
+    }
+
+    .resultText h3 {
+      font-size: 1.35rem;
+    }
+
+    .resultText p {
+      margin-top: 6px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .scoreBar {
+      height: 14px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(28, 89, 86, 0.08);
+    }
+
+    .scoreFill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--warm));
+      transition: width 0.8s ease;
+    }
+
+    .scoreMeta {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .good .resultBadge {
+      background: rgba(15, 157, 115, 0.12);
+      color: var(--good);
+    }
+
+    .bad .resultBadge {
+      background: rgba(207, 77, 71, 0.12);
+      color: var(--bad);
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(-4deg); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-10px) scale(1.03); }
+    }
+
+    @keyframes ripple {
+      0% { transform: scale(0.84); opacity: 0.7; }
+      100% { transform: scale(1.1); opacity: 0; }
+    }
+
+    @keyframes badgePop {
+      0% { transform: scale(0.7) rotate(-12deg); }
+      70% { transform: scale(1.08) rotate(3deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    @media (max-width: 900px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 14px;
+      }
+
+      .hero,
+      .formWrap {
+        padding: 22px;
+      }
+
+      .fields,
+      .heroStats {
+        grid-template-columns: 1fr;
+      }
+
+      .resultTop,
+      .scoreMeta {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">TensorFlow Deal Predictor</p>
+      <h1>Check if a product deal looks worth taking.</h1>
+      <p class="lead">
+        Enter the product details below and this lightweight ML model will estimate whether the deal looks promising.
+        The result appears instantly with a clear score and animated status card.
+      </p>
+
+      <div class="iconStage" aria-hidden="true">
+        <div class="pulseRing"></div>
+        <div class="orb"></div>
+        <div id="heroIcon" class="dealIcon">&#x1F6CD;&#xFE0F;</div>
+      </div>
+
+      <div class="heroStats">
+        <article class="stat">
+          <strong>4 Inputs</strong>
+          <span>Price, discount, rating, and stock are used for prediction.</span>
+        </article>
+        <article class="stat">
+          <strong>Live Score</strong>
+          <span>A confidence score is shown with an animated progress bar.</span>
+        </article>
+        <article class="stat">
+          <strong>Fast Check</strong>
+          <span>The form works smoothly on desktop and mobile screens.</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="formWrap">
+      <div class="formHead">
+        <h2>Prediction Form</h2>
+        <p>Fill in each value, then press predict to get the model result.</p>
+      </div>
+
+      <form id="predictForm">
+        <div class="fields">
+          <label for="price">
+            Price
+            <input id="price" name="price" type="number" min="0" step="0.01" placeholder="500" required />
+          </label>
+
+          <label for="discount">
+            Discount %
+            <input id="discount" name="discount" type="number" min="0" step="0.01" placeholder="30" required />
+          </label>
+
+          <label for="rating">
+            Rating
+            <input id="rating" name="rating" type="number" min="0" max="5" step="0.1" placeholder="4.5" required />
+          </label>
+
+          <label for="stock">
+            Stock
+            <input id="stock" name="stock" type="number" min="0" step="1" placeholder="100" required />
+          </label>
+        </div>
+
+        <div class="actions">
+          <button id="submitBtn" type="submit">Predict Deal</button>
+          <a class="linkBtn" href="/ml/train">Train Model</a>
+        </div>
+      </form>
+
+      <p id="statusText" class="status">Ready for your first prediction.</p>
+
+      <section id="resultCard" class="resultCard" aria-live="polite">
+        <div class="resultTop">
+          <div id="resultBadge" class="resultBadge">&#x2728;</div>
+          <div class="resultText">
+            <h3 id="resultTitle">Waiting for data</h3>
+            <p id="resultSummary">Submit the form to see the decision and score.</p>
+          </div>
+        </div>
+
+        <div class="scoreBar">
+          <div id="scoreFill" class="scoreFill"></div>
+        </div>
+
+        <div class="scoreMeta">
+          <span>Model confidence</span>
+          <strong id="scoreValue">0.00%</strong>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/predict.js"></script>
+</body>
+</html>

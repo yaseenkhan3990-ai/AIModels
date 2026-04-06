@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rain Prediction</title>
+  <style>
+    :root {
+      --bg:
+        radial-gradient(circle at top left, rgba(117, 175, 255, 0.26), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(65, 143, 255, 0.18), transparent 32%),
+        linear-gradient(160deg, #f6fbff 0%, #e7f2ff 42%, #d7eaff 100%);
+      --panel: rgba(255, 255, 255, 0.78);
+      --panel-deep: rgba(234, 244, 255, 0.92);
+      --line: rgba(52, 103, 173, 0.14);
+      --text: #17314f;
+      --muted: #5d7692;
+      --primary: #2f80ed;
+      --primary-dark: #1b5eb7;
+      --soft: #eef6ff;
+      --good: #2f80ed;
+      --warn: #f0a534;
+      --calm: #5aa4ff;
+      --shadow: 0 28px 80px rgba(60, 98, 143, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px;
+      display: grid;
+      place-items: center;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .shell {
+      width: min(1180px, 100%);
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      overflow: hidden;
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+    }
+
+    .hero,
+    .formWrap {
+      padding: 34px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 22px;
+      align-content: start;
+      background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.96), rgba(233, 244, 255, 0.86)),
+        linear-gradient(180deg, rgba(47, 128, 237, 0.06), rgba(90, 164, 255, 0.16));
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--primary-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 5vw, 4.3rem);
+      line-height: 0.94;
+    }
+
+    .lead {
+      margin: 0;
+      max-width: 34rem;
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 1rem;
+    }
+
+    .skyStage {
+      position: relative;
+      min-height: 300px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 28px;
+      background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.94), rgba(220, 238, 255, 0.75)),
+        linear-gradient(180deg, rgba(185, 220, 255, 0.4), rgba(240, 248, 255, 0.75));
+      border: 1px solid rgba(52, 103, 173, 0.1);
+    }
+
+    .cloud {
+      position: absolute;
+      width: 150px;
+      height: 56px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      filter: blur(0.4px);
+      animation: drift 10s ease-in-out infinite;
+    }
+
+    .cloud::before,
+    .cloud::after {
+      content: "";
+      position: absolute;
+      background: inherit;
+      border-radius: 50%;
+    }
+
+    .cloud::before {
+      width: 54px;
+      height: 54px;
+      left: 22px;
+      top: -22px;
+    }
+
+    .cloud::after {
+      width: 72px;
+      height: 72px;
+      right: 22px;
+      top: -30px;
+    }
+
+    .cloudOne {
+      top: 34px;
+      left: 44px;
+      opacity: 0.82;
+    }
+
+    .cloudTwo {
+      top: 90px;
+      right: 42px;
+      transform: scale(0.88);
+      animation-duration: 13s;
+    }
+
+    .weatherIcon {
+      position: relative;
+      z-index: 1;
+      font-size: 6rem;
+      line-height: 1;
+      animation: bob 2.6s ease-in-out infinite;
+      user-select: none;
+    }
+
+    .rainDrop {
+      position: absolute;
+      width: 10px;
+      height: 28px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(90, 164, 255, 0.12), rgba(47, 128, 237, 0.85));
+      animation: fall 1.8s linear infinite;
+      opacity: 0.8;
+    }
+
+    .drop1 { left: 28%; top: 34%; animation-delay: 0.1s; }
+    .drop2 { left: 46%; top: 38%; animation-delay: 0.6s; }
+    .drop3 { left: 59%; top: 28%; animation-delay: 0.9s; }
+    .drop4 { left: 70%; top: 35%; animation-delay: 1.2s; }
+
+    .heroStats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .stat {
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(52, 103, 173, 0.09);
+    }
+
+    .stat strong,
+    .stat span {
+      display: block;
+    }
+
+    .stat strong {
+      margin-bottom: 6px;
+      font-size: 1.12rem;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    .formWrap {
+      display: grid;
+      gap: 20px;
+      align-content: start;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(245, 250, 255, 0.85));
+    }
+
+    .formHead h2 {
+      margin: 0 0 8px;
+      font-size: 1.4rem;
+    }
+
+    .formHead p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    form {
+      display: grid;
+      gap: 16px;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(47, 128, 237, 0.16);
+      background: white;
+      color: var(--text);
+      font: inherit;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(47, 128, 237, 0.12);
+    }
+
+    .helper {
+      margin: -2px 0 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button,
+    .linkBtn {
+      padding: 14px 18px;
+      border: none;
+      border-radius: 999px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+    }
+
+    button {
+      min-width: 190px;
+      color: white;
+      background: linear-gradient(135deg, var(--primary), #63a8ff);
+    }
+
+    .linkBtn {
+      color: var(--primary-dark);
+      background: var(--soft);
+    }
+
+    button:hover,
+    .linkBtn:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.7;
+      cursor: wait;
+    }
+
+    .status {
+      margin: 0;
+      min-height: 24px;
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    .resultCard {
+      display: grid;
+      gap: 16px;
+      padding: 22px;
+      border-radius: 28px;
+      border: 1px solid rgba(52, 103, 173, 0.1);
+      background: var(--panel-deep);
+      transform: translateY(10px) scale(0.98);
+      opacity: 0;
+      transition: transform 0.32s ease, opacity 0.32s ease, border-color 0.32s ease;
+    }
+
+    .resultCard.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .resultCard.rain {
+      border-color: rgba(47, 128, 237, 0.28);
+    }
+
+    .resultCard.maybe {
+      border-color: rgba(240, 165, 52, 0.28);
+    }
+
+    .resultCard.clear {
+      border-color: rgba(90, 164, 255, 0.22);
+    }
+
+    .resultTop {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .resultBadge {
+      width: 76px;
+      height: 76px;
+      border-radius: 24px;
+      display: grid;
+      place-items: center;
+      font-size: 2rem;
+      background: rgba(47, 128, 237, 0.1);
+      animation: pulseBadge 0.72s ease;
+    }
+
+    .resultText h3,
+    .resultText p {
+      margin: 0;
+    }
+
+    .resultText h3 {
+      font-size: 1.35rem;
+    }
+
+    .resultText p {
+      margin-top: 6px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .scoreBar {
+      height: 14px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(52, 103, 173, 0.1);
+    }
+
+    .scoreFill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #7cc4ff, var(--primary));
+      transition: width 0.8s ease;
+    }
+
+    .scoreMeta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .detailGrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .detailBox {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(52, 103, 173, 0.08);
+    }
+
+    .detailBox span,
+    .detailBox strong {
+      display: block;
+    }
+
+    .detailBox span {
+      color: var(--muted);
+      font-size: 0.84rem;
+      margin-bottom: 4px;
+    }
+
+    .detailBox strong {
+      font-size: 1rem;
+    }
+  .weather-container {
+  width: 300px;
+  margin: 50px auto;
+  padding: 20px;
+  border-radius: 12px;
+  background: #f5f7fa;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  text-align: center;
+  font-family: Arial;
+}
+
+select, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  background: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+#result {
+  margin-top: 15px;
+  font-weight: bold;
+}
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes drift {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(10px); }
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-10px); opacity: 0; }
+      20% { opacity: 0.8; }
+      100% { transform: translateY(160px); opacity: 0; }
+    }
+
+    @keyframes pulseBadge {
+      0% { transform: scale(0.76); }
+      70% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    @media (max-width: 920px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 14px;
+      }
+
+      .hero,
+      .formWrap {
+        padding: 22px;
+      }
+
+      .fields,
+      .heroStats,
+      .detailGrid {
+        grid-template-columns: 1fr;
+      }
+
+      .resultTop,
+      .scoreMeta {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">TensorFlow Rain Predictor</p>
+      <h1>Check whether rain is likely today.</h1>
+      <p class="lead">
+        Enter a few simple weather conditions and the model will estimate the chance of rainfall.
+        The result is shown in a friendly forecast card with clear guidance instead of raw ML jargon.
+      </p>
+
+      <div class="skyStage" aria-hidden="true">
+        <div class="cloud cloudOne"></div>
+        <div class="cloud cloudTwo"></div>
+        <div class="rainDrop drop1"></div>
+        <div class="rainDrop drop2"></div>
+        <div class="rainDrop drop3"></div>
+        <div class="rainDrop drop4"></div>
+        <div id="heroIcon" class="weatherIcon">&#x2601;&#xFE0F;</div>
+      </div>
+
+      <div class="heroStats">
+        <article class="stat">
+          <strong>4 Weather Inputs</strong>
+          <span>Temperature, humidity, wind speed, and cloud cover shape the forecast.</span>
+        </article>
+        <article class="stat">
+          <strong>Fast Forecast</strong>
+          <span>The model trains quickly and gives a simple rain-readiness result.</span>
+        </article>
+        <article class="stat">
+          <strong>Friendly UI</strong>
+          <span>The page is mobile-friendly and explains the result in plain language.</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="formWrap">
+      <div class="formHead">
+        <h2>Rain Prediction Form</h2>
+        <p>Use current conditions from your area, then press predict to get a rain outlook.</p>
+      </div>
+
+      <form id="predictForm">
+        <div class="fields">
+          <label for="temperature">
+            Temperature (°C)
+            <input id="temperature" name="temperature" type="number" step="0.1" placeholder="29" required />
+            <span class="helper">Example: 24 to 38</span>
+          </label>
+
+          <label for="humidity">
+            Humidity (%)
+            <input id="humidity" name="humidity" type="number" min="0" max="100" step="1" placeholder="86" required />
+            <span class="helper">Higher humidity often supports rainfall.</span>
+          </label>
+
+          <label for="windSpeed">
+            Wind Speed (km/h)
+            <input id="windSpeed" name="windSpeed" type="number" min="0" step="0.1" placeholder="17" required />
+            <span class="helper">Use the average current wind speed.</span>
+          </label>
+
+          <label for="cloudCover">
+            Cloud Cover (%)
+            <input id="cloudCover" name="cloudCover" type="number" min="0" max="100" step="1" placeholder="90" required />
+            <span class="helper">Heavy cloud cover can increase rain chances.</span>
+          </label>
+        </div>
+        
+        <div class="actions">
+          <button id="submitBtn" type="submit">Predict Rain</button>
+          <a class="linkBtn" href="/rnml/train">Retrain Model</a>
+        </div>
+      </form>
+
+     <div class="weather-container">
+  <h2>🌦️ Rain Predictor</h2>
+
+  <select id="citySelect" onchange="getPrediction()">
+    <option value="delhi">Delhi</option>
+    <option value="faridabad">Faridabad</option>
+    <option value="mumbai">Mumbai</option>
+  </select>
+
+  <!-- <button onchange="getPrediction()">Check Rain</button> -->
+  <div id="result"></div>
+</div>
+
+
+      <p id="statusText" class="status">Ready to check the weather.</p>
+     
+      <section id="resultCard" class="resultCard" aria-live="polite">
+        <div class="resultTop">
+          <div id="resultBadge" class="resultBadge">&#x1F327;&#xFE0F;</div>
+          <div class="resultText">
+            <h3 id="resultTitle">Waiting for forecast</h3>
+            <p id="resultSummary">Fill in the weather details to see the rain prediction.</p>
+          </div>
+        </div>
+
+        <div class="scoreBar">
+          <div id="scoreFill" class="scoreFill"></div>
+        </div>
+
+        <div class="scoreMeta">
+          <span>Rain confidence</span>
+          <strong id="scoreValue">0.00%</strong>
+        </div>
+
+        <div class="detailGrid">
+          <div class="detailBox">
+            <span>Temperature</span>
+            <strong id="detailTemperature">--</strong>
+          </div>
+          <div class="detailBox">
+            <span>Humidity</span>
+            <strong id="detailHumidity">--</strong>
+          </div>
+
+          <div class="detailBox">
+            <span>Wind Speed</span>
+            <strong id="detailWindSpeed">--</strong>
+          </div>
+
+          <div class="detailBox">
+            <span>Cloud Cover</span>
+            <strong id="detailCloudCover">--</strong>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/rainPridiction.js"></script>
+</body>
+</html>

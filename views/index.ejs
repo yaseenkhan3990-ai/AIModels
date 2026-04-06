@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Service Hub</title>
+  <style>
+    :root {
+      --page-bg:
+        radial-gradient(circle at 12% 18%, rgba(255, 179, 71, 0.22), transparent 26%),
+        radial-gradient(circle at 88% 14%, rgba(37, 99, 235, 0.18), transparent 24%),
+        radial-gradient(circle at 78% 82%, rgba(16, 185, 129, 0.16), transparent 24%),
+        linear-gradient(160deg, #f9f4ea 0%, #eef6ff 46%, #f1fbf6 100%);
+      --surface: rgba(255, 255, 255, 0.78);
+      --surface-strong: rgba(255, 255, 255, 0.9);
+      --border: rgba(24, 39, 75, 0.1);
+      --text: #163047;
+      --muted: #5f7184;
+      --primary: #e76f51;
+      --primary-dark: #c85236;
+      --secondary: #1d4ed8;
+      --success: #159a6f;
+      --shadow: 0 24px 60px rgba(31, 41, 55, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--page-bg);
+      color: var(--text);
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 24px;
+    }
+
+    .heroCard,
+    .infoCard,
+    .serviceCard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .heroCard {
+      padding: 34px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 14px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(231, 111, 81, 0.12);
+      color: var(--primary-dark);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 4vw, 4.8rem);
+      line-height: 0.94;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      max-width: 720px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.75;
+    }
+
+    .heroActions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 28px;
+    }
+
+    .cta,
+    .linkBtn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 52px;
+      padding: 0 20px;
+      border-radius: 16px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .cta {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 14px 30px rgba(231, 111, 81, 0.28);
+    }
+
+    .linkBtn {
+      background: rgba(29, 78, 216, 0.1);
+      color: var(--secondary);
+    }
+
+    .cta:hover,
+    .linkBtn:hover,
+    .serviceCard:hover {
+      transform: translateY(-3px);
+    }
+
+    .infoCard {
+      padding: 24px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .statusBox {
+      padding: 18px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(29, 78, 216, 0.12), rgba(21, 154, 111, 0.12));
+    }
+
+    .statusBox strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+
+    .statusBox p,
+    .miniList p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .miniList {
+      display: grid;
+      gap: 12px;
+    }
+
+    .miniItem {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: var(--surface-strong);
+      border: 1px solid rgba(24, 39, 75, 0.08);
+    }
+
+    .miniItem strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .servicesHeader {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin: 10px 0 18px;
+    }
+
+    .servicesHeader h2 {
+      margin: 0;
+      font-size: clamp(1.6rem, 2.6vw, 2.3rem);
+    }
+
+    .servicesHeader p {
+      margin: 0;
+      max-width: 620px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .serviceGrid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .serviceCard {
+      padding: 22px;
+      display: grid;
+      gap: 18px;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .serviceTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 12px;
+    }
+
+    .serviceCard h3 {
+      margin: 0;
+      font-size: 1.28rem;
+    }
+
+    .tag {
+      flex-shrink: 0;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(21, 154, 111, 0.12);
+      color: var(--success);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .serviceCard p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .points {
+      display: grid;
+      gap: 10px;
+    }
+
+    .point {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(243, 247, 252, 0.9);
+      border: 1px solid rgba(24, 39, 75, 0.06);
+      color: var(--text);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .serviceActions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: auto;
+    }
+
+    .serviceActions a {
+      flex: 1 1 180px;
+    }
+
+    .footerNote {
+      margin-top: 24px;
+      padding: 18px 22px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .serviceGrid {
+        grid-template-columns: 1fr;
+      }
+
+      .servicesHeader {
+        align-items: start;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        width: min(100% - 20px, 1180px);
+        padding-top: 16px;
+        padding-bottom: 24px;
+      }
+
+      .heroCard,
+      .infoCard,
+      .serviceCard {
+        border-radius: 22px;
+      }
+
+      .heroCard,
+      .infoCard,
+      .serviceCard,
+      .footerNote {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .heroCard {
+        padding-top: 24px;
+        padding-bottom: 24px;
+      }
+
+      .serviceTop {
+        flex-direction: column;
+      }
+
+      .heroActions,
+      .serviceActions {
+        flex-direction: column;
+      }
+
+      .serviceActions a {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <article class="heroCard">
+        <p class="eyebrow">Main Home Page</p>
+        <h1>One clean place to open every service you built.</h1>
+        <p class="subtitle">
+          This dashboard gives you a simple starting point for your apps. Open any service in one click,
+          move easily between tools, and use the same homepage on desktop or mobile.
+        </p>
+        <div class="heroActions">
+          <a class="cta" href="<%= services[0].path %>">Open First Service</a>
+          <a class="linkBtn" href="#services">Browse All Services</a>
+        </div>
+      </article>
+
+      <aside class="infoCard">
+        <div class="statusBox">
+          <strong>Your Workspace Hub</strong>
+          <p>Use this as the main landing page for your AI tools, ML tools, and future services.</p>
+        </div>
+
+        <div class="miniList">
+          <div class="miniItem">
+            <strong>Responsive Layout</strong>
+            <p>The cards stack nicely on smaller screens so the homepage stays easy to use everywhere.</p>
+          </div>
+          <div class="miniItem">
+            <strong>Fast Navigation</strong>
+            <p>Each service card includes a clear action button so you can jump directly into the tool you want.</p>
+          </div>
+          <div class="miniItem">
+            <strong>Ready To Grow</strong>
+            <p>You can add more services later by extending the `services` array in your server route.</p>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section id="services">
+      <div class="servicesHeader">
+        <div>
+          <h2>Available Services</h2>
+          <p>Choose the service you want to use right now. Each card is focused, readable, and built for quick access.</p>
+        </div>
+      </div>
+
+      <div class="serviceGrid">
+        <% services.forEach((service) => { %>
+          <article class="serviceCard">
+            <div class="serviceTop">
+              <div>
+                <h3><%= service.name %></h3>
+              </div>
+              <span class="tag"><%= service.tag %></span>
+            </div>
+
+            <p><%= service.description %></p>
+
+            <div class="points">
+              <% service.bullets.forEach((item) => { %>
+                <div class="point"><%= item %></div>
+              <% }) %>
+            </div>
+
+            <div class="serviceActions">
+              <a class="cta" href="<%= service.path %>">Open Service</a>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+
+    <section class="footerNote">
+      This page is now your main entry point at <strong>`/`</strong>. Your existing service routes still work,
+      but the homepage gives you one simple place to reach all of them.
+    </section>
+  </main>
+</body>
+</html>
