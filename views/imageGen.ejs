@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Cartoon Studio</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #ffe0d2, #d9f6f0);
+      display: flex;
+      justify-content: center;
+      padding: 30px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1100px;
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.12);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+    }
+
+    .card {
+      background: #fafafa;
+      border-radius: 15px;
+      padding: 20px;
+      border: 1px solid #eee;
+    }
+
+    .upload-box {
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .upload-box:hover {
+      border-color: #ff6e40;
+      background: #fff5f0;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .preview img,
+    .result img {
+      width: 100%;
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+
+    .input-group {
+      margin-top: 15px;
+    }
+
+    input[type="text"] {
+      width: 95%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 15px;
+      padding: 14px;
+      border: none;
+      background: #ff6e40;
+      color: white;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button:hover {
+      background: #e85a2f;
+    }
+
+    .secondary-btn {
+      background: #333;
+      margin-top: 10px;
+    }
+
+    .secondary-btn:hover {
+      background: #111;
+    }
+
+    .loading {
+      text-align: center;
+      margin-top: 15px;
+      display: none;
+      font-weight: 600;
+      color: #ff6e40;
+    }
+
+    .label {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .empty {
+      color: #999;
+      text-align: center;
+      padding: 30px 10px;
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <h1>🎨 AI Image Generation</h1>
+  <p class="subtitle">Upload your image → Convert into stunning cartoon artwork</p>
+
+  <form id="form">
+
+    <div class="grid">
+
+      <div class="card">
+        <div class="label">📤 Upload Image</div>
+
+        <label class="upload-box" for="fileInput">
+          <p>Click or Drag Image Here</p>
+          <input type="file" id="fileInput" name="image" accept="image/*" required />
+        </label>
+
+        <div class="preview" id="preview"></div>
+
+        <div class="input-group">
+          <input 
+            type="text" 
+            name="prompt" 
+            placeholder="Optional style: Pixar, Anime, Disney..."
+            value="<%= prompt %>"
+          />
+        </div>
+
+<button type="button" id="generateBtn">Generate Cartoon</button>
+        <div class="loading" id="loading">⏳ Generating your cartoon...</div>
+      </div>
+
+      <!-- RIGHT: OUTPUT -->
+      <div class="card">
+        <div class="label">🖼️ Result</div>
+
+        <% if (image) { %>
+          <div class="result">
+            <img src="<%= image %>" alt="Generated"/>
+            
+            <a href="<%= image %>" download>
+              <button type="button" class="secondary-btn">⬇ Download Image</button>
+            </a>
+          </div>
+        <% } else { %>
+          <div class="empty">
+            Your generated cartoon will appear here
+          </div>
+        <% } %>
+      </div>
+
+    </div>
+  </form>
+
+</div>
+<script>
+const fileInput = document.getElementById("fileInput");
+const preview = document.getElementById("preview");
+const loading = document.getElementById("loading");
+const generateBtn = document.getElementById("generateBtn");
+const resultBox = document.getElementById("resultBox");
+
+//Preview image
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files[0];
+
+  if (file){
+    const url = URL.createObjectURL(file);
+    preview.innerHTML = `<img src="${url}" />`;
+  }
+});
+
+generateBtn.addEventListener("click", async () => {
+  const file = fileInput.files[0];
+  const prompt = document.querySelector("input[name='prompt']").value;
+
+  if (!file) {
+    alert("Please upload an image first");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("image", file);
+  formData.append("prompt", prompt);
+
+  try {
+    loading.style.display = "block";
+    //resultBox.innerHTML = "";
+
+    const res = await fetch("/imgG/generate", {
+      method: "POST",
+      body: formData
+    });
+
+   const data = await res.json();
+
+   console.log(data)
+    if (!res.ok) {
+      throw new Error(data || "Something went wrong");
+    }
+
+    resultBox.innerHTML = `
+      <div class="label">Your Cartoon Image</div>
+      <img src="${data.image}" />
+      <a href="${data.image}" download>
+        <button class="secondary-btn">⬇ Download</button>
+      </a>
+    `;
+
+  } catch (err) {
+    // console.error(err);
+    resultBox.innerHTML = `<p style="color:red;">${data}</p>`;
+  } finally {
+     loading.style.display = "none";
+  }
+});
+</script>
+</body>
+</html>

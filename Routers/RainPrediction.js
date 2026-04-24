@@ -208,7 +208,7 @@ rnml.get('/current/:city', async (req, res) => {
     input.dispose();
     prediction.dispose();
     const score = result[0];
-
+   
     res.json({
         score,
         result: buildRainMessage(score),

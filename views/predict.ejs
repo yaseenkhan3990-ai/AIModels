@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deal Predictor</title>
+  <title>Product Deal Search</title>
   <style>
     :root {
       --bg:
@@ -187,7 +187,8 @@
       font-size: 0.96rem;
     }
 
-    input {
+    input,
+    select {
       width: 100%;
       padding: 14px 16px;
       border: 1px solid rgba(255, 112, 67, 0.16);
@@ -198,7 +199,8 @@
       transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
     }
 
-    input:focus {
+    input:focus,
+    select:focus {
       outline: none;
       border-color: var(--warm);
       transform: translateY(-1px);
@@ -395,11 +397,11 @@
 <body>
   <main class="shell">
     <section class="hero">
-      <p class="eyebrow">TensorFlow Deal Predictor</p>
-      <h1>Check if a product deal looks worth taking.</h1>
+      <p class="eyebrow">Product Deal Search</p>
+      <h1>Find out if a product is the best deal.</h1>
       <p class="lead">
-        Enter the product details below and this lightweight ML model will estimate whether the deal looks promising.
-        The result appears instantly with a clear score and animated status card.
+        Enter the product details below and get a deal score based on price, sale count, rating, and discount.
+        The result appears instantly with a clear score and recommendation.
       </p>
 
       <div class="iconStage" aria-hidden="true">
@@ -411,62 +413,63 @@
       <div class="heroStats">
         <article class="stat">
           <strong>4 Inputs</strong>
-          <span>Price, discount, rating, and stock are used for prediction.</span>
+          <span>Price, sale count, rating, and discount are used for scoring.</span>
         </article>
         <article class="stat">
-          <strong>Live Score</strong>
-          <span>A confidence score is shown with an animated progress bar.</span>
+          <strong>Deal Score</strong>
+          <span>A weighted product score is shown with an animated progress bar.</span>
         </article>
         <article class="stat">
-          <strong>Fast Check</strong>
-          <span>The form works smoothly on desktop and mobile screens.</span>
+          <strong>Quick Result</strong>
+          <span>The result explains whether the deal looks strong, average, or poor.</span>
         </article>
       </div>
     </section>
 
     <section class="formWrap">
       <div class="formHead">
-        <h2>Prediction Form</h2>
-        <p>Fill in each value, then press predict to get the model result.</p>
+        <h2>Deal Form</h2>
+        <p>Fill in the product details, then press search to score the deal.</p>
       </div>
 
       <form id="predictForm">
         <div class="fields">
           <label for="price">
             Price
-            <input id="price" name="price" type="number" min="0" step="0.01" placeholder="500" required />
+            <input id="price" name="price" type="number" min="0" step="0.01" placeholder="999" required />
           </label>
 
-          <label for="discount">
-            Discount %
-            <input id="discount" name="discount" type="number" min="0" step="0.01" placeholder="30" required />
+          <label for="sale">
+            Sale Count
+            <input id="sale" name="sale" type="number" min="0" step="1" placeholder="350" required />
           </label>
 
           <label for="rating">
             Rating
-            <input id="rating" name="rating" type="number" min="0" max="5" step="0.1" placeholder="4.5" required />
+            <input id="rating" name="rating" type="number" min="0" max="5" step="0.1" placeholder="4.6" required />
           </label>
 
-          <label for="stock">
-            Stock
-            <input id="stock" name="stock" type="number" min="0" step="1" placeholder="100" required />
+          <label for="discount">
+            Discount %
+            <input id="discount" name="discount" type="number" min="0" step="0.01" placeholder="25" required />
           </label>
         </div>
 
         <div class="actions">
-          <button id="submitBtn" type="submit">Predict Deal</button>
-          <a class="linkBtn" href="/ml/train">Train Model</a>
+          <button id="submitBtn" type="submit">Find Product</button>
+          <button id="trainBtn" type="button">Train Model</button>
+          <a class="linkBtn" href="/home">Back Home</a>
         </div>
       </form>
 
-      <p id="statusText" class="status">Ready for your first prediction.</p>
+      <p id="statusText" class="status">Ready for your first deal search.</p>
 
       <section id="resultCard" class="resultCard" aria-live="polite">
         <div class="resultTop">
           <div id="resultBadge" class="resultBadge">&#x2728;</div>
           <div class="resultText">
-            <h3 id="resultTitle">Waiting for data</h3>
-            <p id="resultSummary">Submit the form to see the decision and score.</p>
+            <h3 id="resultTitle">Waiting for search</h3>
+            <p id="resultSummary">Submit the form to see the deal result and score.</p>
           </div>
         </div>
 
@@ -475,7 +478,7 @@
         </div>
 
         <div class="scoreMeta">
-          <span>Model confidence</span>
+          <span>Deal score</span>
           <strong id="scoreValue">0.00%</strong>
         </div>
       </section>
@@ -485,3 +488,4 @@
   <script src="/predict.js"></script>
 </body>
 </html>
+

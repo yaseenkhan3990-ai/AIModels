@@ -72,7 +72,6 @@ function getClient() {
     apiKey: process.env.OPENAI_API_KEY,
   });
 }
-
 async function buildAssistantResponse({
   client,
   userText,
@@ -82,21 +81,54 @@ async function buildAssistantResponse({
 }) {
   const chat = await client.chat.completions.create({
     model: "gpt-4o-mini",
-    temperature: 0.7,
+    temperature: 0.85,
     messages: [
       {
         role: "system",
-        content:
-          `You are a friendly voice assistant. ` +
-          `Reply only in ${targetLanguage}. ` +
-          `Keep the answer natural, concise, and easy to understand when spoken aloud. ` +
-          `Assistant style: ${assistantMode}.`,
+        content: `
+You are a PROFESSIONAL TRANSLATOR + VOICE ASSISTANT.
+
+🎯 YOUR JOB:
+- Understand the user's message
+- Translate it into ${targetLanguage}
+- Apply tone: ${assistantMode}
+- Make it NATURAL, SIMPLE, and HUMAN
+
+🔥 RULES:
+- ALWAYS respond in ${targetLanguage}
+- Keep sentences SHORT and CLEAR
+- Use SIMPLE words (easy to understand)
+- Make it sound natural when spoken
+
+🎤 TRANSLATION LOGIC:
+- Detect input language automatically
+- If same language → rephrase in better tone
+- If different → translate properly (not word-to-word)
+- Fix Hinglish into proper ${targetLanguage}
+
+🎭 TONE:
+- friendly → casual & warm
+- professional → clear & formal
+- playful → fun & expressive
+- bold → confident & strong
+- helpful → simple & guiding
+
+🚫 AVOID:
+- robotic sentences
+- complex words
+- literal translation
+
+✅ OUTPUT:
+- Clean translated sentence
+- Easy to speak
+- Human-like
+
+ONLY return the final translated response.
+`,
       },
       {
         role: "user",
-        content:
-          `The user said: "${userText}". ` +
-          `If helpful, answer the request. If they appear to want translation, translate their words into ${targetLanguage}.`,
+        content: `User said: "${userText}"`,
       },
     ],
   });
@@ -104,9 +136,10 @@ async function buildAssistantResponse({
   const replyText = chat.choices[0]?.message?.content?.trim();
 
   if (!replyText) {
-    throw new Error("The assistant did not return a spoken reply.");
+    throw new Error("No response generated");
   }
 
+  // 🔊 TEXT → SPEECH
   const speech = await client.audio.speech.create({
     model: "gpt-4o-mini-tts",
     voice: selectedVoice,
@@ -125,7 +158,6 @@ async function buildAssistantResponse({
     audioMimeType: "audio/mpeg",
   };
 }
-
 aiVoiceAss.post("/voice", upload.single("audio"), async (req, res) => {
   const uploadedFilePath = req.file?.path;
   const client = getClient();
@@ -151,7 +183,6 @@ aiVoiceAss.post("/voice", upload.single("audio"), async (req, res) => {
     });
 
     const userText = transcription.text?.trim();
-
     if (!userText) {
       return res.status(400).json({
         error: "I could not hear any clear speech. Please try again.",
@@ -165,7 +196,6 @@ aiVoiceAss.post("/voice", upload.single("audio"), async (req, res) => {
       selectedVoice,
       assistantMode,
     });
-
     res.json(payload);
   } catch (error) {
     console.error("Voice assistant request failed:");
@@ -178,7 +208,6 @@ aiVoiceAss.post("/voice", upload.single("audio"), async (req, res) => {
     }
   }
 });
-
 aiVoiceAss.post("/text", async (req, res) => {
   const client = getClient();
 
@@ -187,7 +216,6 @@ aiVoiceAss.post("/text", async (req, res) => {
       error: "Missing OPENAI_API_KEY on the server.",
     });
   }
-
   const userText = req.body.text?.trim();
 
   if (!userText) {
@@ -195,9 +223,7 @@ aiVoiceAss.post("/text", async (req, res) => {
       error: "Please type a message before sending it.",
     });
   }
-
   const { targetLanguage, selectedVoice, assistantMode } = normalizeAssistantOptions(req.body);
-
   try {
     const payload = await buildAssistantResponse({
       client,
@@ -206,7 +232,6 @@ aiVoiceAss.post("/text", async (req, res) => {
       selectedVoice,
       assistantMode,
     });
-
     res.json(payload);
   } catch (error) {
     console.error("Text assistant request failed:");
@@ -215,5 +240,4 @@ aiVoiceAss.post("/text", async (req, res) => {
     });
   }
 });
-
 export default aiVoiceAss;

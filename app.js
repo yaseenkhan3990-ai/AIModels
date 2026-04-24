@@ -1,8 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
 import aiVoiceAss from "./Routers/AIVoiceAss.js";
+import contentCreation from "./Routers/ContentCreation.js";
 import tfml from "./Routers/ProductSearch.js";
 import rnml from "./Routers/RainPrediction.js";
+import imageG from "./Routers/ImageGen.js";
 dotenv.config();
 
 const app = express();
@@ -28,15 +30,27 @@ app.get("/", (req, res) => {
         ],
       },
       {
-        name: "Product Deal Predictor",
-        path: "/ml/predict",
-        tag: "TensorFlow",
+        name: "Content Creation Studio",
+        path: "/contentCreation/home",
+        tag: "OpenAI",
         description:
-          "Check if a product looks like a good deal using price, discount, rating, and stock.",
+          "Upload a video and generate platform-ready titles, captions, descriptions, and hashtags in one structured workflow.",
         bullets: [
-          "Quick scoring",
-          "Simple product inputs",
-          "Useful for comparing offers",
+          "Video upload and transcript extraction",
+          "YouTube, Instagram, and Facebook packages",
+          "Clean structured output for posting",
+        ],
+      },
+      {
+        name: "Product Deal Search",
+        path: "/ml/predict",
+        tag: "Deal Score",
+        description:
+          "Find out whether a product looks like the best deal using price, sale count, rating, and discount.",
+        bullets: [
+          "Price-aware scoring",
+          "Sales, rating, and discount checks",
+          "Instant deal result",
         ],
       },
       {
@@ -51,6 +65,17 @@ app.get("/", (req, res) => {
           "Manual weather inputs",
         ],
       },
+       {
+        name: "Image Generator",
+        path: "/imgG/home",
+        tag: "Image Gen",
+        description:
+          "image Generator",
+        bullets: [
+          "Generate Image",
+          "Manual image  inputs",
+        ],
+      },
     ],
   });
 });
@@ -60,9 +85,10 @@ app.get("/home", (req, res) => {
 });
 
 app.use("/ai", aiVoiceAss);
+app.use("/contentCreation", contentCreation);
 app.use("/ml", tfml);
 app.use('/rnml',rnml);
-
+app.use('/imgG',imageG)
 app.listen(port, () => {
-  console.log(`Voice assistant running at http://localhost:${port}`);
+  console.log(`Application running at http://localhost:${port}`);
 });

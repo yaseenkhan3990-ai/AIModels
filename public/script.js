@@ -16,250 +16,224 @@ const assistantFace = document.getElementById("assistantFace");
 const assistantAura = document.getElementById("assistantAura");
 const assistantMood = document.getElementById("assistantMood");
 
+// ================= STATUS =================
 const setStatus = (message) => {
-    statusText.textContent = message;
+  statusText.textContent = message;
 };
 
+// ================= AVATAR =================
 const setAvatarState = (state) => {
-    assistantFace.dataset.state = state;
+  assistantFace.dataset.state = state;
 
-    const states = {
-        idle: {
-            emoji: "🙂",
-            aura: "✨",
-            mood: "Ready to help",
-        },
-        listening: {
-            emoji: "👂",
-            aura: "🎧",
-            mood: "Listening carefully",
-        },
-        thinking: {
-            emoji: "🤔",
-            aura: "💭",
-            mood: "Thinking and translating",
-        },
-        speaking: {
-            emoji: "😄",
-            aura: "🗣️",
-            mood: "Speaking the reply",
-        },
-        error: {
-            emoji: "🥺",
-            aura: "⚠️",
-            mood: "Something needs another try",
-        },
-    };
+  const states = {
+    idle: { emoji: "🙂", aura: "✨", mood: "Ready to help" },
+    listening: { emoji: "👂", aura: "🎧", mood: "Listening carefully" },
+    thinking: { emoji: "🤔", aura: "💭", mood: "Thinking and translating" },
+    speaking: { emoji: "😄", aura: "🗣️", mood: "Speaking the reply" },
+    error: { emoji: "🥺", aura: "⚠️", mood: "Something needs another try" },
+  };
 
-    const nextState = states[state] || states.idle;
-    assistantFace.textContent = nextState.emoji;
-    assistantAura.textContent = nextState.aura;
-    assistantMood.textContent = nextState.mood;
+  const nextState = states[state] || states.idle;
+  assistantFace.textContent = nextState.emoji;
+  assistantAura.textContent = nextState.aura;
+  assistantMood.textContent = nextState.mood;
 };
 
+// ================= BUTTON CONTROL =================
 const setRecordButton = ({ active, disabled, label }) => {
-    startBtn.classList.toggle("active", active);
-    startBtn.disabled = disabled;
-    startBtn.textContent = label;
+  startBtn.classList.toggle("active", active);
+  startBtn.disabled = disabled;
+  startBtn.textContent = label;
 };
 
 const setIdleState = () => {
-    setRecordButton({
-        active: false,
-        disabled: false,
-        label: "Start speaking",
-    });
-    sendTextBtn.disabled = false;
-    if (audioPlayer.paused || audioPlayer.ended) {
-        setAvatarState("idle");
-    }
+  setRecordButton({
+    active: false,
+    disabled: false,
+    label: "Start speaking",
+  });
+
+  sendTextBtn.disabled = false;
+
+  if (audioPlayer.paused || audioPlayer.ended) {
+    setAvatarState("idle");
+  }
 };
 
+// ================= UTILS =================
 const stopTracks = () => {
-    mediaRecorder?.stream?.getTracks().forEach((track) => track.stop());
+  mediaRecorder?.stream?.getTracks().forEach((track) => track.stop());
 };
 
+// ================= START RECORDING =================
 async function startRecording() {
-    if (startBtn.classList.contains('active')) {
-        startBtn.classList.remove('active');
-        startBtn.textContent = 'start '
-    }
-    else {
-        startBtn.classList.add('active');
-        startBtn.textContent = 'stop Listening'
-    }
-    if (mediaRecorder && mediaRecorder.state === "recording") {
-        stopRecording();
-        return;
-    }
+  // 🔁 Toggle behavior
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    stopRecording();
+    return;
+  }
 
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-        audioChunks = [];
-        mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
 
-        mediaRecorder.addEventListener("dataavailable", (event) => {
-            if (event.data.size > 0) {
-                audioChunks.push(event.data);
-            }
-        });
+    mediaRecorder.addEventListener("dataavailable", (event) => {
+      if (event.data.size > 0) {
+        audioChunks.push(event.data);
+      }
+    });
 
-        mediaRecorder.addEventListener("stop", sendAudioToAssistant, { once: true });
-        mediaRecorder.start();
-        setRecordButton({
-            active: true,
-            disabled: false,
-            label: "Stop listening",
-        });
-        setAvatarState("listening");
-        setStatus("Listening... speak now.");
-    } catch (error) {
-        console.error(error);
-        setAvatarState("error");
-        setStatus("Microphone access was blocked. Please allow it and try again.");
-        setIdleState();
-    }
-}
+    mediaRecorder.addEventListener("stop", sendAudioToAssistant, { once: true });
 
-async function stopRecording() {
-    if (!mediaRecorder || mediaRecorder.state !== "recording") {
-        return;
-    }
+    mediaRecorder.start();
 
     setRecordButton({
-        active: false,
-        disabled: true,
-        label: "Stopping...",
+      active: true,
+      disabled: false,
+      label: "Stop listening",
     });
-    setStatus("Uploading your voice...");
-    mediaRecorder.stop();
+
+    setAvatarState("listening");
+    setStatus("Listening...");
+  } catch (error) {
+    console.error(error);
+    setAvatarState("error");
+    setStatus("Microphone permission denied.");
+    setIdleState();
+  }
 }
 
+// ================= STOP RECORDING =================
+async function stopRecording() {
+  if (!mediaRecorder || mediaRecorder.state !== "recording") return;
+
+  setRecordButton({
+    active: false,
+    disabled: true,
+    label: "Stopping...",
+  });
+
+  setStatus("Processing...");
+  mediaRecorder.stop();
+}
+
+// ================= SEND AUDIO =================
 async function sendAudioToAssistant() {
-    try {
-        const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
-        const formData = new FormData();
+  try {
+    const audioBlob = new Blob(audioChunks, {
+      type: mediaRecorder.mimeType || "audio/webm",
+    });
 
-        formData.append("audio", audioBlob, "voice-message.webm");
-        formData.append("targetLanguage", languageSelect.value);
-        formData.append("voice", voiceSelect.value);
-        formData.append("assistantMode", assistantModeInput.value.trim() || "helpful");
+    const formData = new FormData();
+    formData.append("audio", audioBlob);
+    formData.append("targetLanguage", languageSelect.value);
+    formData.append("voice", voiceSelect.value);
+    formData.append("assistantMode", assistantModeInput.value.trim() || "helpful");
 
-        setAvatarState("thinking");
-        setStatus("Transcribing, translating, and creating the voice reply...");
+    setAvatarState("thinking");
 
-        const response = await fetch("/voice", {
-            method: "POST",
-            body: formData,
-        });
+    const response = await fetch("/voice", {
+      method: "POST",
+      body: formData,
+    });
 
-        const payload = await response.json();
+    const payload = await response.json();
 
-        if (!response.ok) {
-            throw new Error(payload.error || "The assistant could not process the request.");
-        }
+    if (!response.ok) throw new Error(payload.error);
 
-        transcriptOutput.textContent = payload.transcript;
-        responseOutput.textContent = payload.responseText;
+    transcriptOutput.textContent = payload.transcript;
+    responseOutput.textContent = payload.responseText;
 
-        if (currentAudioUrl) {
-            URL.revokeObjectURL(currentAudioUrl);
-        }
+    // 🎧 AUDIO PLAY
+    if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
 
-        const audioBytes = Uint8Array.from(atob(payload.audioBase64), (char) => char.charCodeAt(0));
-        const responseBlob = new Blob([audioBytes], { type: payload.audioMimeType });
-        currentAudioUrl = URL.createObjectURL(responseBlob);
+    const audioBytes = Uint8Array.from(atob(payload.audioBase64), (c) =>
+      c.charCodeAt(0)
+    );
 
-        audioPlayer.src = currentAudioUrl;
-        setAvatarState("speaking");
-        await audioPlayer.play().catch(() => { });
+    const blob = new Blob([audioBytes], { type: payload.audioMimeType });
+    currentAudioUrl = URL.createObjectURL(blob);
 
-        setStatus(`Ready in ${payload.targetLanguage}.`);
-    } catch (error) {
-        console.error(error);
-        setAvatarState("error");
-        setStatus(error.message || "Something went wrong while creating the reply.");
-    } finally {
-        stopTracks();
-        setIdleState();
-    }
+    audioPlayer.src = currentAudioUrl;
+
+    setAvatarState("speaking");
+    await audioPlayer.play().catch(() => {});
+
+  } catch (error) {
+    console.error(error);
+    setAvatarState("error");
+    setStatus("Voice processing failed.");
+  } finally {
+    stopTracks();
+    setIdleState();
+  }
 }
 
+// ================= TEXT SEND =================
 async function sendTextToAssistant() {
-    const text = textInput.value.trim();
+  const text = textInput.value.trim();
+  if (!text) return;
 
-    if (!text) {
-        setStatus("Type a message first, then send it.");
-        textInput.focus();
-        return;
-    }
+  sendTextBtn.disabled = true;
+  startBtn.disabled = true;
 
-    sendTextBtn.disabled = true;
-    startBtn.disabled = true;
+  try {
+    setAvatarState("thinking");
 
-    try {
-        setAvatarState("thinking");
-        setStatus("Writing the reply and creating its voice...");
+    const response = await fetch("/text", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text,
+        targetLanguage: languageSelect.value,
+        voice: voiceSelect.value,
+        assistantMode: assistantModeInput.value.trim() || "helpful",
+      }),
+    });
 
-        const response = await fetch("/text", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                text,
-                targetLanguage: languageSelect.value,
-                voice: voiceSelect.value,
-                assistantMode: assistantModeInput.value.trim() || "helpful",
-            }),
-        });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error);
 
-        const payload = await response.json();
+    transcriptOutput.textContent = payload.transcript;
+    responseOutput.textContent = payload.responseText;
 
-        if (!response.ok) {
-            throw new Error(payload.error || "The assistant could not process the text.");
-        }
+    if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
 
-        transcriptOutput.textContent = payload.transcript;
-        responseOutput.textContent = payload.responseText;
+    const audioBytes = Uint8Array.from(atob(payload.audioBase64), (c) =>
+      c.charCodeAt(0)
+    );
 
-        if (currentAudioUrl) {
-            URL.revokeObjectURL(currentAudioUrl);
-        }
+    const blob = new Blob([audioBytes], { type: payload.audioMimeType });
+    currentAudioUrl = URL.createObjectURL(blob);
 
-        const audioBytes = Uint8Array.from(atob(payload.audioBase64), (char) => char.charCodeAt(0));
-        const responseBlob = new Blob([audioBytes], { type: payload.audioMimeType });
-        currentAudioUrl = URL.createObjectURL(responseBlob);
+    audioPlayer.src = currentAudioUrl;
 
-        audioPlayer.src = currentAudioUrl;
-        setAvatarState("speaking");
-        await audioPlayer.play().catch(() => { });
-
-        setStatus(`Text reply ready in ${payload.targetLanguage}.`);
-    } catch (error) {
-        console.error(error);
-        setAvatarState("error");
-        setStatus(error.message || "Something went wrong while handling the text.");
-    } finally {
-        setIdleState();
-    }
+    setAvatarState("speaking");
+    await audioPlayer.play().catch(() => {});
+  } catch (error) {
+    console.error(error);
+    setAvatarState("error");
+  } finally {
+    setIdleState();
+  }
 }
 
+// ================= EVENTS =================
 startBtn.addEventListener("click", startRecording);
 sendTextBtn.addEventListener("click", sendTextToAssistant);
+
 audioPlayer.addEventListener("play", () => setAvatarState("speaking"));
 audioPlayer.addEventListener("ended", () => setAvatarState("idle"));
-audioPlayer.addEventListener("pause", () => {
-    if (!audioPlayer.ended) {
-        setAvatarState("idle");
-    }
-});
-textInput.addEventListener("keydown", (event) => {
-    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
-        sendTextToAssistant();
-    }
+
+textInput.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    sendTextToAssistant();
+  }
 });
 
+// ================= INIT =================
 setIdleState();
-setStatus("Choose a language, then speak or type to your assistant.");

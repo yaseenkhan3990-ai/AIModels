@@ -1,5 +1,6 @@
 const predictForm = document.getElementById("predictForm");
 const submitBtn = document.getElementById("submitBtn");
+const trainBtn = document.getElementById("trainBtn");
 const statusText = document.getElementById("statusText");
 const resultCard = document.getElementById("resultCard");
 const resultBadge = document.getElementById("resultBadge");
@@ -10,32 +11,34 @@ const scoreValue = document.getElementById("scoreValue");
 const heroIcon = document.getElementById("heroIcon");
 
 let submissionInFlight = false;
+let trainingInFlight = false;
 
 function setLoadingState(isLoading) {
     submitBtn.disabled = isLoading;
-    submitBtn.textContent = isLoading ? "Checking..." : "Predict Deal";
+    submitBtn.textContent = isLoading ? "Searching..." : "Find Product";
     if (isLoading) {
-        statusText.textContent = "Running the prediction model...";
+        statusText.textContent = "Training TensorFlow deal model and scoring the product...";
     }
     heroIcon.textContent = isLoading ? "\u23F3" : heroIcon.textContent;
 }
 
-function showResult({ score, result }) {
+function showResult({ score, result, summary, details = {} }) {
     const percentage = Math.max(0, Math.min(100, score * 100));
-    const isGoodDeal = score > 0.5;
+    const isStrongMatch = score >= 0.7;
+    const metricText = details.price !== undefined
+        ? ` Price: ${details.price}, Discount: ${details.discount}%, Sales: ${details.sale}, Rating: ${details.rating}.`
+        : "";
 
     resultCard.classList.remove("good", "bad");
-    resultCard.classList.add("visible", isGoodDeal ? "good" : "bad");
+    resultCard.classList.add("visible", isStrongMatch ? "good" : "bad");
 
-    resultBadge.textContent = isGoodDeal ? "\uD83D\uDD25" : "\u26A0\uFE0F";
+    resultBadge.textContent = isStrongMatch ? "\uD83C\uDFAF" : "\uD83D\uDD0D";
     resultTitle.textContent = result;
-    resultSummary.textContent = isGoodDeal
-        ? `This looks promising with a model score of ${percentage.toFixed(2)}%. Higher discount, stronger rating, and healthier stock helped this result.`
-        : `This looks weaker with a model score of ${percentage.toFixed(2)}%. The current mix of price, discount, rating, and stock did not look attractive enough.`;
+    resultSummary.textContent = `${summary}${metricText}`;
     scoreFill.style.width = `${percentage.toFixed(2)}%`;
     scoreValue.textContent = `${percentage.toFixed(2)}%`;
-    statusText.textContent = "Prediction completed.";
-    heroIcon.textContent = isGoodDeal ? "\uD83D\uDD25" : "\uD83E\uDDFE";
+    statusText.textContent = "Deal search completed with TensorFlow scoring.";
+    heroIcon.textContent = isStrongMatch ? "\uD83C\uDFAF" : "\uD83D\uDD0D";
 }
 
 function showError(message) {
@@ -49,6 +52,46 @@ function showError(message) {
     statusText.textContent = message;
     heroIcon.textContent = "\uD83E\uDD72";
 }
+
+async function trainModel() {
+    if (trainingInFlight) {
+        return;
+    }
+
+    trainingInFlight = true;
+    trainBtn.disabled = true;
+    trainBtn.textContent = "Training...";
+    statusText.textContent = "Training TensorFlow model...";
+    heroIcon.textContent = "\u2699\uFE0F";
+
+    try {
+        const response = await fetch("/ml/train", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Training failed.");
+        }
+
+        statusText.textContent = data.message || "Model training completed.";
+        heroIcon.textContent = "\u2705";
+    } catch (error) {
+        showError(error.message || "Training failed.");
+    } finally {
+        trainingInFlight = false;
+        trainBtn.disabled = false;
+        trainBtn.textContent = "Train Model";
+    }
+}
+
+trainBtn.addEventListener("click", async () => {
+    await trainModel();
+});
 
 predictForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -84,7 +127,7 @@ predictForm.addEventListener("submit", async (event) => {
     } finally {
         submissionInFlight = false;
         submitBtn.disabled = false;
-        submitBtn.textContent = "Predict Deal";
+        submitBtn.textContent = "Find Product";
         if (heroIcon.textContent === "\u23F3") {
             heroIcon.textContent = "\uD83D\uDED5\uFE0F";
         }

@@ -31,7 +31,8 @@
       margin: 0;
       min-height: 100vh;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: var(--page-bg);
+      /* background: var(--page-bg); */
+      background-color:  #f9f4ea;
       color: var(--text);
     }
 
@@ -43,7 +44,7 @@
 
     .hero {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: 1fr;
       gap: 24px;
       align-items: stretch;
       margin-bottom: 24px;
@@ -116,7 +117,7 @@
     .cta {
       background: var(--primary);
       color: #fff;
-      box-shadow: 0 14px 30px rgba(231, 111, 81, 0.28);
+      /* box-shadow: 0 14px 30px rgba(231, 111, 81, 0.28); */
     }
 
     .linkBtn {
@@ -127,13 +128,14 @@
     .cta:hover,
     .linkBtn:hover,
     .serviceCard:hover {
-      transform: translateY(-3px);
+      transform: rotate(15deg);
     }
 
     .infoCard {
       padding: 24px;
       display: grid;
       gap: 16px;
+      display: none;
     }
 
     .statusBox {
