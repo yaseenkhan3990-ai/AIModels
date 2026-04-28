@@ -242,10 +242,13 @@ generateBtn.addEventListener("click", async () => {
         <button class="secondary-btn">⬇ Download</button>
       </a>
     `;
+    console.log('hiii')
 
   } catch (err) {
     // console.error(err);
-    resultBox.innerHTML = `<p style="color:red;">${data}</p>`;
+    // resultBox.innerHTML = `<p style="color:red;">${data}</p>`;
+       resultBox.innerHTML = `<p style="color:red;">Something went Wrong</p>`;
+
   } finally {
      loading.style.display = "none";
   }
