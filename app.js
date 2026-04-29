@@ -89,6 +89,11 @@ app.use("/contentCreation", contentCreation);
 app.use("/ml", tfml);
 app.use('/rnml',rnml);
 app.use('/imgG',imageG)
-app.listen(port, () => {
-  console.log(`Application running at http://localhost:${port}`);
-});
+
+if (!process.env.VERCEL) {
+  app.listen(port, () => {
+    console.log(`Application running at http://localhost:${port}`);
+  });
+}
+
+export default app;

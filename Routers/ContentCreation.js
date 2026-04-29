@@ -1,11 +1,12 @@
 import express from "express";
 import multer from "multer";
 import fs from "fs";
+import os from "os";
 import { promises as fsPromises } from "fs";
 import OpenAI from "openai";
 
 const cc = express.Router();
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ dest: process.env.VERCEL ? os.tmpdir() : "uploads/" });
 
 function getClient() {
   return new OpenAI({

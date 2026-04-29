@@ -1,11 +1,12 @@
 import express from "express";
 import multer from "multer";
 import fs from "fs";
+import os from "os";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 
 const imageG = express.Router();
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ dest: process.env.VERCEL ? os.tmpdir() : "uploads/" });
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 

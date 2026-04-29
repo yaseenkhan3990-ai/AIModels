@@ -1,10 +1,11 @@
 import multer from "multer";
 import fs from "fs";
+import os from "os";
 import { promises as fsPromises } from "fs";
 import OpenAI from "openai";
 import express from "express";
  
-const upload = multer({ dest: "uploads/" });
+const upload = multer({ dest: process.env.VERCEL ? os.tmpdir() : "uploads/" });
 
 const aiVoiceAss = express.Router();
 const supportedLanguages = [
